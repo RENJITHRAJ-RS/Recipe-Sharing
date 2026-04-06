@@ -1,4 +1,4 @@
-import "./AddRecipe.css"; // reuse same CSS (NO UI CHANGE)
+import "./AddRecipe.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,7 +12,7 @@ export default function EditRecipe() {
   const [ingredients, setIngredients] = useState("");
   const [steps, setSteps] = useState("");
   const [cookingTime, setCookingTime] = useState("");
-  const [difficulty, setDifficulty] = useState("Easy");
+  const [difficulty, setDifficulty] = useState("easy"); // lowercase
   const [image, setImage] = useState(null);
   const [oldImage, setOldImage] = useState("");
 
@@ -35,17 +35,15 @@ export default function EditRecipe() {
       .then((res) => {
         const r = res.data;
 
-        setTitle(r.title);
-        setIngredients(r.ingredients);
-        setSteps(r.steps);
-        setCookingTime(r.cooking_time);
-        setDifficulty(r.difficulty);
-        setOldImage(
-          r.image ? `http://127.0.0.1:8000${r.image}` : ""
-        );
+        setTitle(r.title || "");
+        setIngredients(r.ingredients || "");
+        setSteps(r.steps || "");
+        setCookingTime(r.cooking_time || "");
+        setDifficulty(r.difficulty || "easy"); // IMPORTANT
+        setOldImage(r.image || "");
       })
       .catch((err) => {
-        console.error("Edit load error:", err);
+        console.error("Edit load error:", err.response?.data);
         alert("Failed to load recipe ❌");
         navigate("/myrecipe");
       });
@@ -54,17 +52,21 @@ export default function EditRecipe() {
   // ================= UPDATE RECIPE =================
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Login required ❌");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", title);
     formData.append("ingredients", ingredients);
     formData.append("steps", steps);
     formData.append("cooking_time", cookingTime);
-    formData.append("difficulty", difficulty);
+    formData.append("difficulty", difficulty); // lowercase value
 
-    // append image only if changed
-    if (image !== null) {
+    if (image) {
       formData.append("image", image);
     }
 
@@ -81,6 +83,7 @@ export default function EditRecipe() {
 
       alert("Recipe updated successfully ✅");
       navigate("/myrecipe");
+
     } catch (err) {
       console.error("Update error:", err.response?.data);
       alert("Update failed ❌");
@@ -126,16 +129,16 @@ export default function EditRecipe() {
               required
             />
 
+            {/* FIXED SELECT VALUES */}
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
             >
-              <option>Easy</option>
-              <option>Medium</option>
-              <option>Hard</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
             </select>
 
-            {/* EXISTING IMAGE */}
             {oldImage && (
               <img
                 src={oldImage}

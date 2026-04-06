@@ -1,20 +1,27 @@
+# ================= IMPORTS =================
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
-import rest_framework.permissions as permissions
-from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
-from .permissions import IsAdminUserCustom
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Q, Count, Sum
 
 from .models import User, Recipe
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
-    RecipeSerializer
+    RecipeSerializer,
 )
+
+# =====================================================
+# ===================== API SECTION ====================
+# =====================================================
 
 # ================= REGISTER =================
 class RegisterView(APIView):
@@ -35,24 +42,22 @@ class RegisterView(APIView):
 
 
 # ================= LOGIN =================
+# In your LoginView, use the serializer like this:
 class LoginView(APIView):
+
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
+        email = request.data.get("email")
+        password = request.data.get("password")
 
-        email = serializer.validated_data["email"]
-        password = serializer.validated_data["password"]
+        user = authenticate(request, email=email, password=password)
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({"error": "Invalid credentials"}, status=400)
+        if user is None:
+            return Response(
+                {"error": "Invalid credentials"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        if not user.check_password(password):
-            return Response({"error": "Invalid credentials"}, status=400)
-
-        token, _ = Token.objects.get_or_create(user=user)
+        token, created = Token.objects.get_or_create(user=user)
 
         return Response({
             "token": token.key,
@@ -60,18 +65,16 @@ class LoginView(APIView):
             "name": user.name,
             "email": user.email
         })
-
-
 # ================= ADD RECIPE =================
 class AddRecipeView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         serializer = RecipeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(created_by=request.user)
             return Response(serializer.data, status=201)
-
         return Response(serializer.errors, status=400)
 
 
@@ -81,14 +84,15 @@ class RecipeListView(APIView):
 
     def get(self, request):
         recipes = Recipe.objects.all().order_by("-created_at")
-        data = RecipeSerializer(recipes, many=True).data
+        serializer = RecipeSerializer(recipes, many=True)
+        data = serializer.data
 
-        # 🔥 FIX RESPONSE FOR FRONTEND UI
-        for recipe in data:
-            obj = Recipe.objects.get(id=recipe["id"])
-            recipe["author"] = obj.created_by.name if obj.created_by else "Unknown"
-            recipe["views"] = obj.view_count
-            recipe["image"] = obj.image.url if obj.image else None
+        # Fix response for frontend
+        for item in data:
+            recipe_obj = Recipe.objects.get(id=item["id"])
+            item["author"] = recipe_obj.created_by.name if recipe_obj.created_by else "Unknown"
+            item["views"] = recipe_obj.view_count
+            item["image"] = recipe_obj.image.url if recipe_obj.image else None
 
         return Response(data)
 
@@ -99,39 +103,38 @@ class MyRecipeView(APIView):
 
     def get(self, request):
         recipes = Recipe.objects.filter(created_by=request.user)
-        data = RecipeSerializer(recipes, many=True).data
+        serializer = RecipeSerializer(recipes, many=True)
+        data = serializer.data
 
-        for recipe in data:
-            obj = Recipe.objects.get(id=recipe["id"])
-            recipe["author"] = "You"
-            recipe["views"] = obj.view_count
-            recipe["image"] = obj.image.url if obj.image else None
+        for item in data:
+            recipe_obj = Recipe.objects.get(id=item["id"])
+            item["author"] = "You"
+            item["views"] = recipe_obj.view_count
+            item["image"] = recipe_obj.image.url if recipe_obj.image else None
 
         return Response(data)
 
 
-# ================= RECIPE DETAILS =================
+# ================= RECIPE DETAIL =================
 class RecipeDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        try:
-            recipe = Recipe.objects.get(id=pk)
-        except Recipe.DoesNotExist:
-            return Response({"error": "Recipe not found"}, status=404)
+        recipe = get_object_or_404(Recipe, id=pk)
 
-        # 🔥 INCREASE VIEW COUNT
+        # Increase view count
         recipe.view_count += 1
         recipe.save()
 
-        data = RecipeSerializer(recipe).data
+        serializer = RecipeSerializer(recipe)
+        data = serializer.data
 
-        # 🔥 FIX FOR FRONTEND
         data["author"] = recipe.created_by.name if recipe.created_by else "Unknown"
         data["views"] = recipe.view_count
         data["image"] = recipe.image.url if recipe.image else None
 
         return Response(data)
+
 
 # ================= EDIT RECIPE =================
 class EditRecipeView(APIView):
@@ -139,11 +142,7 @@ class EditRecipeView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def put(self, request, pk):
-        recipe = get_object_or_404(
-            Recipe,
-            pk=pk,
-            created_by=request.user
-        )
+        recipe = get_object_or_404(Recipe, id=pk, created_by=request.user)
 
         serializer = RecipeSerializer(
             recipe,
@@ -154,8 +153,7 @@ class EditRecipeView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
-
-        print(serializer.errors)  # 🔥 DEBUG
+        print("SERIALIZER ERRORS:", serializer.errors) 
         return Response(serializer.errors, status=400)
 
 # ================= DELETE RECIPE =================
@@ -163,53 +161,221 @@ class DeleteRecipeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk):
-        recipe = get_object_or_404(Recipe, pk=pk, created_by=request.user)
+        recipe = get_object_or_404(Recipe, id=pk, created_by=request.user)
         recipe.delete()
         return Response({"message": "Recipe deleted successfully"}, status=204)
-    
-class AdminLoginView(APIView):
-        
-    def post(self, request):
-        email = request.data.get("email")
-        password = request.data.get("password")
+
+
+# =====================================================
+# ================= ADMIN TEMPLATE SECTION =============
+# =====================================================
+
+# ================= ADMIN LOGIN =================
+def admin_login(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
 
         try:
-            user = User.objects.get(email=email, is_admin=True)
+            user = User.objects.get(email=email, is_superuser=True)
         except User.DoesNotExist:
-            return Response(
-                {"error": "Admin not found"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+            messages.error(request, "Admin not found")
+            return redirect("admin_login")
 
         if not user.check_password(password):
-            return Response(
-                {"error": "Invalid password"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+            messages.error(request, "Invalid password")
+            return redirect("admin_login")
 
-        if not user.is_active:
-            return Response(
-                {"error": "Admin account disabled"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        login(request, user)
+        messages.success(request, f"Welcome back, {user.name or user.email}!")
+        return redirect("recipelisting")
 
-        token, _ = Token.objects.get_or_create(user=user)
+    return render(request, "adminlogin.html")
 
-        return Response({
-            "token": token.key,
-            "admin_id": user.id,
-            "name": user.name
-        })
 
-class AdminUserListView(APIView):
-    permission_classes = [IsAdminUserCustom]
+# ================= RECIPE LISTING (MAIN ADMIN PAGE) =================
+@login_required(login_url='admin_login')
+def recipe_listing(request):
+    # Check if user is admin
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    # Get all recipes with author info
+    recipes = Recipe.objects.select_related('created_by').all().order_by("-id")
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        recipes = recipes.filter(
+            Q(title__icontains=search_query) |
+            Q(created_by__name__icontains=search_query) |
+            Q(created_by__email__icontains=search_query)
+        )
+    
+    context = {
+        "recipes": recipes,
+        "search_query": search_query,
+        "total_recipes": recipes.count()
+    }
+    return render(request, "recipelisting.html", context)
 
-    def get(self, request):
-        users = User.objects.all()
-        data = [{
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "is_active": u.is_active
-        } for u in users]
-        return Response(data)
+
+# ================= RECIPE DETAIL (ADMIN) =================
+@login_required(login_url='admin_login')
+def recipe_detail(request, id):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    recipe = get_object_or_404(Recipe, id=id)
+    return render(request, "recipedetail.html", {"recipe": recipe})
+
+
+# ================= DELETE RECIPE (ADMIN) =================
+@login_required(login_url='admin_login')
+def recipe_delete(request, id):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    recipe = get_object_or_404(Recipe, id=id)
+    recipe_title = recipe.title
+    recipe.delete()
+    messages.success(request, f'Recipe "{recipe_title}" deleted successfully!')
+    return redirect("recipelisting")
+
+
+# ================= USER LISTING (ADMIN) =================
+@login_required(login_url='admin_login')
+def user_listing(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    # 🔥 Hide admin users
+    users = User.objects.filter(is_superuser=False).order_by('-id')
+    
+    search_query = request.GET.get('search', '')
+    if search_query:
+        users = users.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    context = {
+        "users": users,
+        "search_query": search_query,
+        "total_users": users.count()
+    }
+    return render(request, "userlisting.html", context)
+
+
+# ================= USER PROFILE (ADMIN) =================
+@login_required(login_url='admin_login')
+def user_profile(request, id):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    user = get_object_or_404(User, id=id)
+    recipes = Recipe.objects.filter(created_by=user).order_by('-created_at')
+    
+    # Get recipe counts and total views
+    total_recipes = recipes.count()
+    total_views = sum(recipe.view_count for recipe in recipes)
+    
+    return render(request, "userprofile.html", {
+        "profile_user": user,
+        "recipes": recipes,
+        "total_recipes": total_recipes,
+        "total_views": total_views
+    })
+
+
+# ================= TOGGLE USER STATUS (BLOCK/UNBLOCK) =================
+@login_required(login_url='admin_login')
+def toggle_user_status(request, id):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    user = get_object_or_404(User, id=id)
+    
+    # Don't allow blocking yourself
+    if user.id == request.user.id:
+        messages.error(request, "You cannot block/unblock yourself!")
+        return redirect('userlisting')
+    
+    # Toggle status
+    user.is_active = not user.is_active
+    user.save()
+    
+    status = "unblocked" if user.is_active else "blocked"
+    messages.success(request, f"User {user.email} has been {status}.")
+    
+    return redirect('userlisting')
+
+
+# ================= MOST VIEWED RECIPES REPORT =================
+@login_required(login_url='admin_login')
+def most_viewed_recipes(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    recipes = Recipe.objects.select_related('created_by').all().order_by('-view_count')[:50]
+    
+    # Calculate statistics
+    total_users = User.objects.count()
+    total_recipes = Recipe.objects.count()
+    total_views = Recipe.objects.aggregate(total=Sum('view_count'))['total'] or 0
+    active_users = User.objects.filter(is_active=True).count()
+    
+    context = {
+        "recipes": recipes,
+        "total_users": total_users,
+        "total_recipes": total_recipes,
+        "total_views": total_views,
+        "active_users": active_users,
+        "top_recipes": recipes,
+    }
+    return render(request, "recipereport.html", context)
+
+
+# ================= ADMIN DASHBOARD (Optional) =================
+@login_required(login_url='admin_login')
+def admin_dashboard(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin only.")
+        return redirect('admin_login')
+    
+    # Get statistics
+    total_users = User.objects.count()
+    total_recipes = Recipe.objects.count()
+    total_views = Recipe.objects.aggregate(total=Sum('view_count'))['total'] or 0
+    
+    recent_recipes = Recipe.objects.select_related('created_by').order_by('-created_at')[:5]
+    # FIXED: Changed from '-date_joined' to '-id'
+    recent_users = User.objects.order_by('-id')[:5]
+    
+    # Most viewed recipes
+    popular_recipes = Recipe.objects.select_related('created_by').order_by('-view_count')[:5]
+    
+    context = {
+        'total_users': total_users,
+        'total_recipes': total_recipes,
+        'total_views': total_views,
+        'recent_recipes': recent_recipes,
+        'recent_users': recent_users,
+        'popular_recipes': popular_recipes,
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+
+# ================= ADMIN LOGOUT =================
+@login_required(login_url='admin_login')
+def admin_logout(request):
+    logout(request)
+    messages.success(request, "Logged out successfully!")
+    return redirect("admin_login")

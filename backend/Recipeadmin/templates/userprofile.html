@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <title>Admin | User Details</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <style>
+        /* === YOUR EXACT STYLES === */
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background: #f4f6f8;
         }
-
-        /* NAVBAR */
         .navbar {
             background: #ffffff;
             padding: 15px 30px;
@@ -21,13 +19,11 @@
             align-items: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-
         .logo {
             font-size: 20px;
             font-weight: bold;
             color: #2f855a;
         }
-
         .nav-links a {
             margin-left: 20px;
             text-decoration: none;
@@ -36,24 +32,19 @@
             padding: 6px 12px;
             border-radius: 5px;
         }
-
         .nav-links a.active,
         .nav-links a:hover {
             background: #2f855a;
             color: #ffffff;
         }
-
-        /* PAGE */
         .container {
             padding: 30px;
             max-width: 1100px;
             margin: auto;
         }
-
         h1 {
             margin-bottom: 20px;
         }
-
         .card {
             background: #ffffff;
             padding: 20px;
@@ -61,37 +52,30 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             margin-bottom: 30px;
         }
-
         .status-active {
             color: #16a34a;
             font-weight: bold;
         }
-
         .status-blocked {
             color: #dc2626;
             font-weight: bold;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
         }
-
         th, td {
             padding: 14px;
             text-align: left;
             border-bottom: 1px solid #eee;
         }
-
         th {
             background: #f0fdf4;
             color: #166534;
         }
-
         tr:hover {
             background: #f9fafb;
         }
-
         .btn {
             padding: 6px 12px;
             font-size: 13px;
@@ -101,51 +85,40 @@
             margin-right: 6px;
             display: inline-block;
         }
-
         .view-btn {
             background: #2563eb;
         }
-
         .back-btn {
             background: #6b7280;
         }
     </style>
 </head>
 <body>
-
-<!-- NAVBAR -->
 <div class="navbar">
     <div class="logo">🍳 Admin Dashboard</div>
     <div class="nav-links">
         <a href="{% url 'recipelisting' %}">Recipes</a>
-        <a href="{% url 'userlisting' %}" >Users</a>
+        <a href="{% url 'userlisting' %}" class="active">Users</a>
         <a href="{% url 'recipereport' %}">Reports</a>
-        <a href="">Logout</a>
+        <a href="{% url 'admin_logout' %}">Logout</a>
     </div>
 </div>
 
-<!-- PAGE CONTENT -->
 <div class="container">
-
-    <!-- USER DETAILS -->
     <div class="card">
         <h1>User Details</h1>
-
-        <p><strong>Username:</strong> </p>
-        <p><strong>Email:</strong> </p>
-
-            <p><strong>Status:</strong> <span class="status-active">Active</span></p>
-     
-            <p><strong>Status:</strong> <span class="status-blocked">Blocked</span></p>
-       
-
+        <p><strong>Username:</strong> {{ profile_user.name|default:profile_user.username }}</p>
+        <p><strong>Email:</strong> {{ profile_user.email }}</p>
+        <p><strong>Status:</strong>
+            <span class="{% if profile_user.is_active %}status-active{% else %}status-blocked{% endif %}">
+                {% if profile_user.is_active %}Active{% else %}Blocked{% endif %}
+            </span>
+        </p>
         <a href="{% url 'userlisting' %}" class="btn back-btn">← Back to Users</a>
     </div>
 
-    <!-- USER RECIPES -->
     <div class="card">
         <h2>User Recipes</h2>
-
         <table>
             <tr>
                 <th>Recipe Title</th>
@@ -153,27 +126,20 @@
                 <th>Views</th>
                 <th>Action</th>
             </tr>
-
             {% for recipe in recipes %}
             <tr>
                 <td>{{ recipe.title }}</td>
-                <td>{{ recipe.difficulty }}</td>
-                <td>{{ recipe.views }}</td>
+                <td>{{ recipe.difficulty_level|default:"N/A" }}</td>
+                <td>{{ recipe.view_count }}</td>
                 <td>
-                    <a href="{% url 'recipedetail' recipe.id %}" class="btn view-btn">
-                        View
-                    </a>
+                    <a href="{% url 'recipedetail' recipe.id %}" class="btn view-btn">View</a>
                 </td>
             </tr>
             {% empty %}
-            <tr>
-                <td colspan="4">This user has no recipes.</td>
-            </tr>
+            <tr><td colspan="4">This user has no recipes.</td></tr>
             {% endfor %}
         </table>
     </div>
-
 </div>
-
 </body>
 </html>

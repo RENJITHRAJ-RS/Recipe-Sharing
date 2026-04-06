@@ -1,161 +1,229 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Admin | User Listing</title>
+    <title>User Management | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
         }
 
-        /* NAVBAR */
+        body {
+            background-color: #f5f6f8;
+        }
+
+        /* ===== TOP NAVBAR ===== */
         .navbar {
-            background: #ffffff;
-            padding: 15px 30px;
+            background: white;
+            padding: 15px 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
+        .navbar h2 {
             color: #2f855a;
+            font-weight: 600;
         }
 
         .nav-links a {
-            margin-left: 20px;
             text-decoration: none;
-            color: #333;
+            margin-left: 25px;
             font-weight: 500;
-            padding: 6px 12px;
-            border-radius: 5px;
+            color: #555;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: 0.2s;
         }
 
-        .nav-links a.active,
         .nav-links a:hover {
-            background: #2f855a;
-            color: #ffffff;
+            background: #f0f0f0;
         }
 
-        /* PAGE */
+        .active {
+            background: #2f855a;
+            color: white !important;
+        }
+
+        .logout {
+            color: #dc3545 !important;
+        }
+
+        /* ===== MAIN CONTENT ===== */
         .container {
-            padding: 30px;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
         }
 
         h1 {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 28px;
         }
 
-        /* TABLE */
+        /* ===== TABLE ===== */
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            background: #ffffff;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        th, td {
-            padding: 14px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
         }
 
         th {
-            background: #f0fdf4;
-            color: #166534;
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #eee;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
         }
 
         tr:hover {
-            background: #f9fafb;
+            background-color: #fafafa;
         }
 
-        .status-active {
-            color: #16a34a;
-            font-weight: bold;
+        /* ===== BADGES ===== */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
         }
 
-        .status-blocked {
-            color: #dc2626;
-            font-weight: bold;
+        .active-badge {
+            background: #d4edda;
+            color: #155724;
         }
 
-        .btn {
-            padding: 6px 12px;
-            font-size: 13px;
-            border-radius: 5px;
+        .blocked-badge {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .admin-badge {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        /* ===== ACTIONS ===== */
+        .actions a {
             text-decoration: none;
-            color: #ffffff;
-            margin-right: 6px;
+            margin-right: 12px;
+            font-size: 13px;
+            font-weight: 500;
         }
 
-        .view-btn {
-            background: #2563eb;
+        .view {
+            color: #2f855a;
         }
 
-        .block-btn {
-            background: #dc2626;
+        .block {
+            color: #dc3545;
         }
 
-        .unblock-btn {
-            background: #16a34a;
+        .unblock {
+            color: #28a745;
+        }
+
+        .actions a:hover {
+            text-decoration: underline;
+        }
+
+        .empty {
+            background: white;
+            padding: 50px;
+            border-radius: 10px;
+            text-align: center;
+            color: #999;
         }
     </style>
 </head>
+
 <body>
 
-<!-- NAVBAR -->
+<!-- ===== NAVBAR ===== -->
 <div class="navbar">
-    <div class="logo">🍳 Admin Dashboard</div>
+    <h2>🔍 Admin Dashboard</h2>
 
     <div class="nav-links">
-        <a href="/recipelisting/">Recipes</a>
-        <a href="/userlisting/" class="active">Users</a>
-        <a href="/recipereport/">Reports</a>
-        <a href="/admin-logout/">Logout</a>
+        <a href="{% url 'recipelisting' %}">Recipes</a>
+        <a href="{% url 'userlisting' %}" class="active">Users</a>
+        <a href="{% url 'recipereport' %}">Reports</a>
+        <a href="{% url 'admin_logout' %}" class="logout">Logout</a>
     </div>
 </div>
 
-<!-- PAGE CONTENT -->
+<!-- ===== CONTENT ===== -->
 <div class="container">
-    <h1>User Listing</h1>
 
-    <table>
-        <tr>
-            <th>User Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
+    <h1>User Management</h1>
 
-        <!-- SAMPLE USER -->
-        <tr>
-            <td>Renjith</td>
-            <td>renjith@example.com</td>
-            <td class="status-active">Active</td>
-            <td>
-                <a href="/userprofile/" class="btn view-btn">View</a>
-                <a href="#" class="btn block-btn">Block</a>
-            </td>
-        </tr>
+    {% if users %}
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Recipes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
 
-        <tr>
-            <td>Alex</td>
-            <td>alex@example.com</td>
-            <td class="status-blocked">Blocked</td>
-            <td>
-                <a href="/userprofile/" class="btn view-btn">View</a>
-                <a href="#" class="btn unblock-btn">Unblock</a>
-            </td>
-        </tr>
-    </table>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.name|default:"No Name" }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td>
+                        {% if user.is_superuser %}
+                            <span class="badge admin-badge">Admin</span>
+                        {% elif user.is_active %}
+                            <span class="badge active-badge">Active</span>
+                        {% else %}
+                            <span class="badge blocked-badge">Blocked</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.recipes.count }}</td>
+                    <td class="actions">
+                        <a href="{% url 'userprofile' user.id %}" class="view">View</a>
+
+                        {% if user.id != request.user.id %}
+                            <a href="{% url 'toggle_user_status' user.id %}"
+                               class="{% if user.is_active %}block{% else %}unblock{% endif %}">
+                               {% if user.is_active %}Block{% else %}Unblock{% endif %}
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="empty">
+            No users found.
+        </div>
+    {% endif %}
+
 </div>
 
 </body>

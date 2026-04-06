@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <title>Admin | Recipe Listing</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <style>
+        /* === YOUR EXACT STYLES === */
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background: #f4f6f8;
         }
-
-        /* NAVBAR */
         .navbar {
             background: #ffffff;
             padding: 15px 30px;
@@ -21,13 +19,11 @@
             align-items: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-
         .logo {
             font-size: 20px;
             font-weight: bold;
             color: #2f855a;
         }
-
         .nav-links a {
             margin-left: 20px;
             text-decoration: none;
@@ -36,53 +32,42 @@
             padding: 6px 12px;
             border-radius: 5px;
         }
-
         .nav-links a.active,
         .nav-links a:hover {
             background: #2f855a;
             color: #ffffff;
         }
-
-        /* PAGE */
         .container {
             padding: 30px;
         }
-
         h1 {
             margin-bottom: 20px;
         }
-
-        /* CARDS */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 20px;
         }
-
         .card {
             background: #fff;
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-
         .card img {
             width: 100%;
             height: 160px;
             object-fit: cover;
             border-radius: 8px;
         }
-
         .card h3 {
             margin: 10px 0 5px;
         }
-
         .meta {
             font-size: 14px;
             color: #555;
             margin-bottom: 10px;
         }
-
         .btn {
             display: inline-block;
             padding: 8px 14px;
@@ -92,47 +77,45 @@
             border-radius: 5px;
             font-size: 14px;
         }
-
         .btn:hover {
             background: #276749;
         }
     </style>
 </head>
 <body>
-
-<!-- NAVIGATION BAR -->
 <div class="navbar">
     <div class="logo">🍳 Admin Dashboard</div>
-
     <div class="nav-links">
-        <a href="/recipelisting/">Recipes</a>
-        <a href="/userlisting/">Users</a>
-        <a href="/recipereport/">Reports</a>
-        <a href="/admin-logout/">Logout</a>
+        <a href="{% url 'recipelisting' %}" class="active">Recipes</a>
+        <a href="{% url 'userlisting' %}">Users</a>
+        <a href="{% url 'recipereport' %}">Reports</a>
+        <a href="{% url 'admin_logout' %}">Logout</a>
     </div>
 </div>
 
-<!-- PAGE CONTENT -->
 <div class="container">
     <h1>Recipes</h1>
 
     <div class="grid">
-        <!-- SAMPLE CARD -->
+        {% for recipe in recipes %}
         <div class="card">
-            <img src="https://via.placeholder.com/300x160" alt="Recipe">
-            <h3>Chicken Curry</h3>
-            <div class="meta">⏱ 30 mins | ⭐ Medium | 👁 45 views</div>
-            <a href="/recipedetail/" class="btn">View Recipe</a>
+            {% if recipe.image %}
+                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+            {% else %}
+                <img src="https://via.placeholder.com/300x160?text=No+Image" alt="No image">
+            {% endif %}
+            <h3>{{ recipe.title }}</h3>
+            <div class="meta">
+                ⏱ {{ recipe.cooking_time }} mins |
+                ⭐ {{ recipe.difficulty_level|default:"Medium" }} |
+                👁 {{ recipe.view_count }} views
+            </div>
+            <a href="{% url 'recipedetail' recipe.id %}" class="btn">View Recipe</a>
         </div>
-
-        <div class="card">
-            <img src="https://via.placeholder.com/300x160" alt="Recipe">
-            <h3>Spaghetti</h3>
-            <div class="meta">⏱ 40 mins | ⭐ Easy | 👁 32 views</div>
-            <a href="/recipedetail/" class="btn">View Recipe</a>
-        </div>
+        {% empty %}
+        <p>No recipes found.</p>
+        {% endfor %}
     </div>
 </div>
-
 </body>
 </html>

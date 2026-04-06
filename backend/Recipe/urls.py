@@ -5,8 +5,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+ 
     path('api/', include('Recipeadmin.urls')),
+    
+    path('', include('Recipeadmin.urls')), 
+    
+     path('superadmin/', admin.site.urls),
 ]
 
 # ✅ THIS IS REQUIRED FOR IMAGES
