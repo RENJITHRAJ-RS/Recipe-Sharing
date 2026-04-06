@@ -150,3 +150,9 @@ AUTHENTICATION_BACKENDS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 ALLOWED_HOSTS = ['*']
+
+import os
+
+if os.environ.get('RENDER'):
+    import django
+    django.setup()
