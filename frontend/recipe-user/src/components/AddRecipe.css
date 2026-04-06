@@ -1,0 +1,90 @@
+.add-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.add-card {
+  width: 400px;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.add-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.add-card input,
+.add-card textarea,
+.add-card select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-card textarea {
+  resize: none;
+  height: 80px;
+}
+
+.add-card button {
+  width: 100%;
+  padding: 12px;
+  background-color: #15803d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.add-card button:hover {
+  background-color: #166534;
+}
+/* ===== Edit & Delete button container ===== */
+.recipe-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ===== Common button style ===== */
+.recipe-actions button {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+}
+
+/* ===== Edit Button ===== */
+.edit-btn {
+  background-color: #2563eb; /* blue */
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #1e40af;
+  transform: translateY(-1px);
+}
+
+/* ===== Delete Button ===== */
+.delete-btn {
+  background-color: #dc2626; /* red */
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #991b1b;
+  transform: translateY(-1px);
+}

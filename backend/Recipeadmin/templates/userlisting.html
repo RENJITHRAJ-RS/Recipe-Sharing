@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin | User Listing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: #ffffff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2f855a;
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 5px;
+        }
+
+        .nav-links a.active,
+        .nav-links a:hover {
+            background: #2f855a;
+            color: #ffffff;
+        }
+
+        /* PAGE */
+        .container {
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-active {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .status-blocked {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #ffffff;
+            margin-right: 6px;
+        }
+
+        .view-btn {
+            background: #2563eb;
+        }
+
+        .block-btn {
+            background: #dc2626;
+        }
+
+        .unblock-btn {
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">🍳 Admin Dashboard</div>
+
+    <div class="nav-links">
+        <a href="/recipelisting/">Recipes</a>
+        <a href="/userlisting/" class="active">Users</a>
+        <a href="/recipereport/">Reports</a>
+        <a href="/admin-logout/">Logout</a>
+    </div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="container">
+    <h1>User Listing</h1>
+
+    <table>
+        <tr>
+            <th>User Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+
+        <!-- SAMPLE USER -->
+        <tr>
+            <td>Renjith</td>
+            <td>renjith@example.com</td>
+            <td class="status-active">Active</td>
+            <td>
+                <a href="/userprofile/" class="btn view-btn">View</a>
+                <a href="#" class="btn block-btn">Block</a>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Alex</td>
+            <td>alex@example.com</td>
+            <td class="status-blocked">Blocked</td>
+            <td>
+                <a href="/userprofile/" class="btn view-btn">View</a>
+                <a href="#" class="btn unblock-btn">Unblock</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>
