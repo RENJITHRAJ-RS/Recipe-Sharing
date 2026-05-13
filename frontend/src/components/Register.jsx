@@ -1,6 +1,6 @@
 import "./Login.css";
 import { useState } from "react";
-import axios from "axios";
+import API from "../api"; // ✅ use central API
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -13,38 +13,33 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // ✅ password check
     if (password !== confirmPassword) {
       alert("Passwords do not match ❌");
       return;
     }
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/register/",
-        {
-          name: fullName,   // ✅ FIXED
-          email: email,
-          password: password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await API.post("/api/register/", {
+        name: fullName, // or username if backend needs
+        email: email,
+        password: password,
+      });
 
-      console.log("Response:", response.data);
+      console.log("Response:", res.data);
+
       alert("Account created successfully ✅");
       navigate("/login");
 
+      // clear form
       setFullName("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
 
     } catch (error) {
-      console.log("Backend error:", error.response?.data);
-      alert("Registration failed ❌");
+      console.error("Register error:", error.response?.data);
+      alert(error.response?.data?.message || "Registration failed ❌");
     }
   };
 
@@ -90,7 +85,8 @@ export default function Register() {
         </form>
 
         <p>
-          Already have an account? <span onClick={() => navigate("/login")}>Login</span>
+          Already have an account?{" "}
+          <span onClick={() => navigate("/login")}>Login</span>
         </p>
       </div>
     </div>

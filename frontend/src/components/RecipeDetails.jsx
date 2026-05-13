@@ -21,7 +21,7 @@ export default function RecipeDetails() {
     }
 
     axios
-      .get(`http://127.0.0.1:8000/api/recipes/${id}/`, {
+      .get(`https://recipe-sharing-g4dw.onrender.com/api/recipes/${id}/`, {
         headers: {
           Authorization: `Token ${token}`,
         },

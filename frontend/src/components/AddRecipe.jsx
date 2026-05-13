@@ -42,7 +42,7 @@ export default function AddRecipe() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/recipes/add/",
+        "https://recipe-sharing-g4dw.onrender.com/api/recipes/add/",
         formData,
         {
           headers: {

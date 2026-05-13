@@ -1,6 +1,6 @@
 import "./Login.css";
 import { useState } from "react";
-import axios from "axios";
+import API from "../api"; // ✅ IMPORT API
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -12,21 +12,18 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/login/",
-        {
-          email: email,
-          password: password,
-        }
-      );
+      const res = await API.post("/api/login/", {
+        email: email,
+        password: password,
+      });
 
-      // ✅ SAVE LOGIN DATA (VERY IMPORTANT)
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user_id", response.data.user_id);
-      localStorage.setItem("user_name", response.data.name);
+      // ✅ SAVE LOGIN DATA
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user_id", res.data.user_id);
+      localStorage.setItem("user_name", res.data.name);
 
       alert("Login successful ✅");
-      navigate("/recipes"); // go to recipes page
+      navigate("/recipes");
     } catch (error) {
       console.error("Login error:", error.response?.data);
       alert("Invalid email or password ❌");
@@ -59,7 +56,8 @@ export default function Login() {
         </form>
 
         <p>
-          Don't have an account? <span onClick={() => navigate("/register")}>Register</span>
+          Don't have an account?{" "}
+          <span onClick={() => navigate("/register")}>Register</span>
         </p>
       </div>
     </div>

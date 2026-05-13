@@ -19,7 +19,7 @@ export default function MyRecipe() {
     }
 
     axios
-      .get("http://127.0.0.1:8000/api/recipes/", {
+      .get("https://recipe-sharing-g4dw.onrender.com/api/recipes/", {
         headers: {
           Authorization: `Token ${token}`,
         },
